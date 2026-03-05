@@ -1,0 +1,44 @@
+{
+  "product": {
+    "name": "devana",
+    "display_name": "Devana",
+    "version": "0.1.0",
+    "description": "AI-Powered Multi-Domain Threat Defense System",
+    "homepage": "https://github.com/devana/devana",
+    "license": "Proprietary",
+    "vendor": "Devana Development Team",
+    "maintainer": "Devana Team <devana@example.com>",
+    "copyright": "Copyright (c) 2026 Devana Team"
+  },
+  "build": {
+    "output_name": "Devana",
+    "cpp_standard": "17",
+    "meson_version": "0.60.0",
+    "default_buildtype": "release"
+  },
+  "dependencies": {
+    "qt6": {
+      "required": true,
+      "modules": ["Core", "Gui", "Widgets"]
+    },
+    "openssl": {
+      "required": false
+    },
+    "onnxruntime": {
+      "required": false,
+      "notes": "Required for ML inference in C++ deployment"
+    }
+  },
+  "idl": {
+    "enabled": false,
+    "source_dir": "topics",
+    "compiler": "tools/idl_compiler.py"
+  },
+  "packaging": {
+    "enabled": true,
+    "install_prefix": "/usr/local",
+    "formats": ["deb", "rpm", "arch"],
+    "section": "utils",
+    "priority": "optional"
+  }
+}

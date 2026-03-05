@@ -1,0 +1,151 @@
+{
+  "components": [
+    {
+      "name": "constants",
+      "path": "common",
+      "enabled": true,
+      "type": "library",
+      "required": true,
+      "description": "Project-wide constants and shared header definitions",
+      "depends_on": [],
+      "has_qt": false
+    },
+    {
+      "name": "kiroku",
+      "path": "lib/kiroku",
+      "enabled": true,
+      "type": "library",
+      "required": true,
+      "description": "Logging library — thread-safe, multi-sink logger with file rotation and configurable formatters",
+      "depends_on": [],
+      "has_qt": false
+    },
+    {
+      "name": "common",
+      "path": "src/common",
+      "enabled": false,
+      "type": "library",
+      "required": true,
+      "description": "Common utilities and types",
+      "depends_on": [
+        "kiroku"
+      ],
+      "has_qt": false
+    },
+    {
+      "name": "fusion",
+      "path": "src/fusion",
+      "enabled": false,
+      "type": "library",
+      "required": true,
+      "description": "Sensor fusion engine — correlates events from Sentinel, DADS, and ACCD across time and space",
+      "depends_on": [
+        "common"
+      ],
+      "has_qt": false
+    },
+    {
+      "name": "classifier",
+      "path": "src/classifier",
+      "enabled": false,
+      "type": "library",
+      "required": true,
+      "description": "Threat classifier — ML inference via ONNX Runtime, outputs threat score and category",
+      "depends_on": [
+        "common",
+        "fusion"
+      ],
+      "has_qt": false
+    },
+    {
+      "name": "response",
+      "path": "src/response",
+      "enabled": false,
+      "type": "library",
+      "required": true,
+      "description": "Response engine — executes pre-approved automated actions on high-confidence threats",
+      "depends_on": [
+        "common",
+        "classifier"
+      ],
+      "has_qt": false
+    },
+    {
+      "name": "learning",
+      "path": "src/learning",
+      "enabled": false,
+      "type": "library",
+      "required": false,
+      "description": "Adaptive learning pipeline — stores operator decisions as labeled data for periodic retraining",
+      "depends_on": [
+        "common",
+        "classifier"
+      ],
+      "has_qt": false
+    },
+    {
+      "name": "ui",
+      "path": "src/ui",
+      "enabled": true,
+      "type": "executable",
+      "required": true,
+      "description": "Operator dashboard (Qt6) — human-in-the-loop review, confirm/dismiss/escalate",
+      "depends_on": [
+        "constants"
+      ],
+      "has_qt": true
+    },
+    {
+      "name": "denso",
+      "path": "lib/denso",
+      "enabled": false,
+      "type": "library",
+      "required": true,
+      "description": "Transport and messaging library — wire protocol, topic routing, serialization, QoS",
+      "depends_on": [],
+      "has_qt": false
+    },
+    {
+      "name": "okuden",
+      "path": "lib/okuden",
+      "enabled": false,
+      "type": "library",
+      "required": true,
+      "description": "Server framework — session management, authentication, routing, persistence",
+      "depends_on": [
+        "constants"
+      ],
+      "has_qt": false
+    }
+  ],
+  "profiles": {
+    "minimal": [
+      "kiroku",
+      "common",
+      "denso",
+      "fusion",
+      "classifier"
+    ],
+    "standard": [
+      "kiroku",
+      "common",
+      "denso",
+      "okuden",
+      "fusion",
+      "classifier",
+      "response",
+      "ui"
+    ],
+    "full": [
+      "kiroku",
+      "common",
+      "denso",
+      "okuden",
+      "fusion",
+      "classifier",
+      "response",
+      "learning",
+      "ui"
+    ]
+  }
+}
