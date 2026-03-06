@@ -27,6 +27,14 @@
     "onnxruntime": {
       "required": false,
       "notes": "Required for ML inference in C++ deployment"
+    },
+    "zmq": {
+      "required": true,
+      "notes": "ZeroMQ PUB/SUB transport used by test harness (UnitTestInjector, UnitTestExtractor) and future Densō transport layer",
+      "install_debian": "sudo apt install libzmq3-dev",
+      "install_fedora": "sudo dnf install zeromq-devel",
+      "install_arch": "sudo pacman -S zeromq",
+      "install_macos": "brew install zeromq cppzmq"
     }
   },
   "idl": {

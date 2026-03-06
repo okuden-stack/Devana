@@ -1,0 +1,170 @@
+{
+  "_comment": [
+    "Test harness scenarios for the Devana UnitTestInjector / UnitTestExtractor widgets.",
+    "Each scenario appears as an entry in the scenario picker dropdown.",
+    "This file is loaded at runtime — no recompilation needed to add scenarios.",
+    "",
+    "FIELD TYPES: string | int | uint64 | real | bool | choice | readonly",
+    "See src/ui/UnitTestInjector/README.md for full field reference.",
+    "",
+    "INJECTOR endpoint: bind address  — e.g. tcp://*:5555  or  ipc:///tmp/devana-inj",
+    "EXTRACTOR endpoint: connect addr — e.g. tcp://localhost:5555"
+  ],
+
+  "scenarios": [
+
+    {
+      "name": "Detection Event (Sentinel → Devana)",
+      "_comment": "Simulates the detection messages Sentinel publishes when a track is confirmed.",
+      "injector": {
+        "topic":    "sentinel.detection",
+        "endpoint": "tcp://*:5555",
+        "fields": [
+          { "name": "sensor_id",      "type": "string", "default": "sensor_acoustic_01", "required": true,  "tooltip": "Unique identifier of the originating sensor" },
+          { "name": "sensor_type",    "type": "choice", "choices": ["acoustic","camera","radar","lidar"], "default": "acoustic", "required": true },
+          { "name": "timestamp_ms",   "type": "uint64", "default": 0,    "tooltip": "Epoch ms — 0 means auto-stamp at inject time" },
+          { "name": "confidence",     "type": "real",   "default": 0.85, "min": 0.0, "max": 1.0, "decimals": 3, "required": true },
+          { "name": "classification", "type": "choice", "choices": ["uav","vehicle","personnel","unknown","false_positive"], "default": "uav", "required": true },
+          { "name": "bearing_deg",    "type": "real",   "default": 45.0,  "min": 0.0,    "max": 360.0,   "decimals": 1 },
+          { "name": "range_m",        "type": "real",   "default": 120.0, "min": 0.0,    "max": 50000.0, "decimals": 1 },
+          { "name": "track_id",       "type": "string", "default": "trk_0001" },
+          { "name": "priority",       "type": "choice", "choices": ["LOW","MEDIUM","HIGH","CRITICAL"], "default": "HIGH" },
+          { "name": "encrypted",      "type": "bool",   "default": false }
+        ]
+      },
+      "extractor": {
+        "topic":    "sentinel.detection",
+        "endpoint": "tcp://localhost:5555",
+        "fields": [
+          { "name": "sensor_id",      "type": "string",   "required": true },
+          { "name": "sensor_type",    "type": "readonly" },
+          { "name": "timestamp_ms",   "type": "uint64" },
+          { "name": "confidence",     "type": "real",     "required": true, "tooltip": "Colour-coded: orange ≥ 0.7, red ≥ 0.9" },
+          { "name": "classification", "type": "readonly" },
+          { "name": "bearing_deg",    "type": "real" },
+          { "name": "range_m",        "type": "real" },
+          { "name": "track_id",       "type": "string" },
+          { "name": "priority",       "type": "readonly" },
+          { "name": "encrypted",      "type": "bool" }
+        ]
+      }
+    },
+
+    {
+      "name": "Threat Assessment (Devana output)",
+      "_comment": "Simulates what Devana's classifier publishes after processing a detection.",
+      "injector": {
+        "topic":    "devana.threat",
+        "endpoint": "tcp://*:5556",
+        "fields": [
+          { "name": "track_id",        "type": "string", "default": "trk_0001",     "required": true },
+          { "name": "label",           "type": "string", "default": "hostile_uav",  "required": true },
+          { "name": "severity",        "type": "real",   "default": 0.92, "min": 0.0, "max": 1.0, "decimals": 3, "required": true, "tooltip": "Normalised threat severity — 0.0 (benign) to 1.0 (critical)" },
+          { "name": "threat_class",    "type": "choice", "choices": ["NONE","LOW","MEDIUM","HIGH","CRITICAL"], "default": "HIGH", "required": true },
+          { "name": "detected_at_ms",  "type": "uint64", "default": 0 },
+          { "name": "lat",             "type": "real",   "default": 45.3512, "min": -90.0,  "max": 90.0,  "decimals": 6 },
+          { "name": "lon",             "type": "real",   "default": -75.9175,"min": -180.0, "max": 180.0, "decimals": 6 },
+          { "name": "altitude_m",      "type": "real",   "default": 85.0,    "min": 0.0,    "max": 10000.0, "decimals": 1 },
+          { "name": "model_version",   "type": "int",    "default": 3, "min": 1, "max": 999 },
+          { "name": "requires_action", "type": "bool",   "default": true }
+        ]
+      },
+      "extractor": {
+        "topic":    "devana.threat",
+        "endpoint": "tcp://localhost:5556",
+        "fields": [
+          { "name": "track_id",        "type": "string",   "required": true },
+          { "name": "label",           "type": "string",   "required": true },
+          { "name": "severity",        "type": "real",     "required": true, "tooltip": "Red ≥ 0.9, orange ≥ 0.7" },
+          { "name": "threat_class",    "type": "readonly" },
+          { "name": "detected_at_ms",  "type": "uint64" },
+          { "name": "lat",             "type": "real" },
+          { "name": "lon",             "type": "real" },
+          { "name": "altitude_m",      "type": "real" },
+          { "name": "model_version",   "type": "readonly", "tooltip": "Set by classifier pipeline" },
+          { "name": "requires_action", "type": "bool" }
+        ]
+      }
+    },
+
+    {
+      "name": "End-to-End Pipeline",
+      "_comment": "Inject a Sentinel detection on :5555, watch Devana's classified output on :5556. Requires Devana's processing pipeline to be running between the two sockets.",
+      "injector": {
+        "topic":    "sentinel.detection",
+        "endpoint": "tcp://*:5555",
+        "fields": [
+          { "name": "sensor_id",      "type": "string", "default": "e2e_test_sensor", "required": true },
+          { "name": "sensor_type",    "type": "choice", "choices": ["acoustic","camera","radar","lidar"], "default": "acoustic" },
+          { "name": "timestamp_ms",   "type": "uint64", "default": 0 },
+          { "name": "confidence",     "type": "real",   "default": 0.92, "min": 0.0, "max": 1.0, "decimals": 3, "required": true },
+          { "name": "classification", "type": "choice", "choices": ["uav","vehicle","personnel","unknown"], "default": "uav" },
+          { "name": "track_id",       "type": "string", "default": "e2e_trk_001" }
+        ]
+      },
+      "extractor": {
+        "topic":    "devana.threat",
+        "endpoint": "tcp://localhost:5556",
+        "fields": [
+          { "name": "track_id",        "type": "string",   "required": true,  "tooltip": "Should echo the injected track_id" },
+          { "name": "label",           "type": "string",   "required": true },
+          { "name": "severity",        "type": "real",     "required": true },
+          { "name": "threat_class",    "type": "readonly" },
+          { "name": "requires_action", "type": "bool" },
+          { "name": "model_version",   "type": "readonly" }
+        ]
+      }
+    },
+
+    {
+      "name": "Heartbeat / Keep-Alive",
+      "_comment": "Service health pulse — both Sentinel and Devana components should emit this periodically.",
+      "injector": {
+        "topic":    "devana.heartbeat",
+        "endpoint": "tcp://*:5557",
+        "fields": [
+          { "name": "service_id",      "type": "string",  "default": "devana-core",  "required": true },
+          { "name": "timestamp_ms",    "type": "uint64",  "default": 0 },
+          { "name": "seq",             "type": "int",     "default": 0, "min": 0, "max": 2147483647 },
+          { "name": "status",          "type": "choice",  "choices": ["OK","DEGRADED","ERROR"], "default": "OK", "required": true },
+          { "name": "cpu_pct",         "type": "real",    "default": 0.0,  "min": 0.0, "max": 100.0, "decimals": 1 },
+          { "name": "mem_mb",          "type": "real",    "default": 0.0,  "min": 0.0, "max": 65536.0, "decimals": 1 },
+          { "name": "msg_queue_depth", "type": "int",     "default": 0,    "min": 0,   "max": 100000 }
+        ]
+      },
+      "extractor": {
+        "topic":    "devana.heartbeat",
+        "endpoint": "tcp://localhost:5557",
+        "fields": [
+          { "name": "service_id",      "type": "string",   "required": true },
+          { "name": "timestamp_ms",    "type": "uint64" },
+          { "name": "seq",             "type": "int" },
+          { "name": "status",          "type": "readonly" },
+          { "name": "cpu_pct",         "type": "real",     "tooltip": "Orange ≥ 70%, red ≥ 90%" },
+          { "name": "mem_mb",          "type": "real" },
+          { "name": "msg_queue_depth", "type": "int" }
+        ]
+      }
+    },
+
+    {
+      "name": "Raw / Custom",
+      "_comment": "Minimal schema for ad-hoc testing. Edit the payload field directly with any JSON string.",
+      "injector": {
+        "topic":    "raw.message",
+        "endpoint": "tcp://*:5555",
+        "fields": [
+          { "name": "payload", "type": "string", "default": "{\"key\": \"value\"}", "tooltip": "Enter any JSON string — will be published as-is" }
+        ]
+      },
+      "extractor": {
+        "topic":    "raw.message",
+        "endpoint": "tcp://localhost:5555",
+        "fields": [
+          { "name": "payload", "type": "readonly", "tooltip": "Raw incoming message" }
+        ]
+      }
+    }
+
+  ]
+}

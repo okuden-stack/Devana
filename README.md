@@ -14,6 +14,50 @@ Where individual sensor products detect, **Devana decides**.
 
 ---
 
+## Test Harness
+
+Devana has no operator UI — it is a headless processing pipeline. The Qt6 window that opens is a **development test harness** for exercising the pipeline without building a full integration.
+
+### Scenario picker
+
+Scenarios are defined in `tools/config/test_scenarios.json`. Each scenario loads a schema into both the injector and extractor panels simultaneously. Add a new object to the `"scenarios"` array and restart — no recompile required.
+
+### CLI arguments
+
+```bash
+# Open with the default first scenario
+./Devana
+
+# Preselect a scenario by name
+./Devana --scenario "Detection Event (Sentinel → Devana)"
+
+# Load a custom scenarios file and start on a specific scenario
+./Devana --scenarios-file /path/to/my_scenarios.json --scenario "CAN Bus Frame"
+
+# List all scenarios in a file and exit (no window opens)
+./Devana --scenarios-file /path/to/my_scenarios.json --list-scenarios
+```
+
+| Flag | Short | Description |
+|---|---|---|
+| `--scenario <name>` | `-s` | Preselect scenario by exact name on startup |
+| `--scenarios-file <path>` | `-f` | Load a different JSON file instead of the default |
+| `--list-scenarios` | `-l` | Print scenario names and exit |
+
+### File layout
+
+```
+tools/config/test_scenarios.json   ← scenario definitions (JSON, no recompile)
+src/ui/TestField.h                 ← field descriptor struct (TestField, TestSchema)
+src/ui/UnitTestInjector/           ← ZMQ PUB widget + README
+src/ui/UnitTestExtractor/          ← ZMQ SUB widget + README
+src/ui/TestHarness/                ← TestHarnessWindow, ScenarioLoader
+```
+
+See `src/ui/UnitTestInjector/README.md` and `src/ui/UnitTestExtractor/README.md` for the full JSON schema reference.
+
+---
+
 ## Core Capabilities
 
 | Capability | Description |
@@ -106,6 +150,51 @@ Devana is composed of several distinct machine learning problems, each buildable
 - **Input:** Operator confirm/dismiss/escalate decisions
 - **Output:** New labeled training data, periodic model retraining
 - **Goal:** Devana becomes more accurate the longer it is deployed at a site
+
+---
+
+## Build & Dependencies
+
+### System requirements
+
+Run `./devana doctor` to verify all requirements are met.
+
+| Dependency | Required | Purpose |
+|---|---|---|
+| CMake ≥ 3.16 | Yes | Build system |
+| Qt6 | Yes | Test harness UI |
+| libzmq + cppzmq | Yes | Test harness PUB/SUB transport |
+| pkg-config | Yes | CMake ZMQ discovery |
+| Python 3 | Yes | Build system CLI (`./devana`) |
+| ONNX Runtime | No | ML inference (Stage 1+) |
+
+### Installing ZeroMQ
+
+```bash
+# Debian / Ubuntu
+sudo apt install libzmq3-dev
+
+# Fedora / RHEL
+sudo dnf install zeromq-devel
+
+# Arch Linux
+sudo pacman -S zeromq
+
+# macOS
+brew install zeromq cppzmq
+```
+
+### Build commands
+
+```bash
+./devana build              # incremental build
+./devana build --debug      # debug symbols
+./devana rebuild            # clean + rebuild from scratch
+./devana build --regen      # force regenerate CMakeLists.txt from components.json
+./devana run                # build and launch the test harness
+./devana doctor             # verify all dependencies are installed
+./devana info               # show component and config summary
+```
 
 ---
 

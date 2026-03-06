@@ -89,9 +89,10 @@
       "enabled": true,
       "type": "executable",
       "required": true,
-      "description": "Operator dashboard (Qt6) — human-in-the-loop review, confirm/dismiss/escalate",
+      "description": "Test harness (Qt6) — schema-driven UnitTestInjector and UnitTestExtractor, scenario picker, CLI args",
       "depends_on": [
-        "constants"
+        "constants",
+        "kiroku"
       ],
       "has_qt": true
     },

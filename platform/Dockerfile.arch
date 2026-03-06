@@ -1,0 +1,56 @@
+# ─────────────────────────────────────────────────────────────────────────────
+# Devana — Arch Linux build image
+#
+# Produces a Linux/x86_64 Devana binary from your Mac source tree.
+#
+# Usage (via script):
+#   ./tools/scripts/docker-build.sh
+#
+# Usage (manual):
+#   docker build -f Dockerfile.arch -t devana-arch-builder .
+#   docker run --rm \
+#     -v "$(pwd)":/src:ro \
+#     -v "$(pwd)/dist/linux":/out \
+#     devana-arch-builder
+#
+# The compiled binary lands at:
+#   dist/linux/Devana
+#
+# To enable the ZMQ test harness:
+#   docker run --rm \
+#     -v "$(pwd)":/src:ro \
+#     -v "$(pwd)/dist/linux":/out \
+#     -e DEVANA_ENABLE_ZMQ=ON \
+#     devana-arch-builder
+# ─────────────────────────────────────────────────────────────────────────────
+
+FROM archlinux:base-devel
+
+LABEL maintainer="AK"
+LABEL description="Devana Arch Linux build environment"
+
+# ── System update + build dependencies ───────────────────────────────────────
+RUN pacman -Syu --noconfirm && \
+    pacman -S --noconfirm \
+        cmake \
+        ninja \
+        gcc \
+        pkgconf \
+        qt6-base \
+        zeromq \
+        cppzmq \
+        git \
+        python \
+    && pacman -Scc --noconfirm
+
+# ── Build script ──────────────────────────────────────────────────────────────
+# Copies source from the mounted /src volume, builds in /build, copies the
+# resulting binary to /out (which maps to dist/linux/ on the host).
+COPY platform/docker-entrypoint.sh /usr/local/bin/docker-entrypoint.sh
+RUN chmod +x /usr/local/bin/docker-entrypoint.sh
+
+VOLUME ["/src", "/out"]
+
+ENV DEVANA_ENABLE_ZMQ=OFF
+
+ENTRYPOINT ["/usr/local/bin/docker-entrypoint.sh"]

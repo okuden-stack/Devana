@@ -17,6 +17,22 @@ export DEVANA_CACHE_DIR="${DEVANA_ROOT}/.build_cache"
 export PATH="${DEVANA_ROOT}/tools:${PATH}"
 
 # ============================================================================
+# Linux / Cross-platform Build Aliases
+# ============================================================================
+
+# Docker build — produces dist/linux/Devana (works fully offline)
+alias dlb='./platform/docker-build.sh'
+alias dlbz='./platform/docker-build.sh --zmq'
+alias dlbr='./platform/docker-build.sh --rebuild'
+alias dlbs='./platform/docker-build.sh --shell'
+
+# Server sync — rsync source, remote build, pull binary
+alias dls='./platform/sync-server.sh'
+alias dlss='./platform/sync-server.sh --source-only'
+alias dlsp='./platform/sync-server.sh --pull'
+alias dlst='./platform/sync-server.sh --status'
+
+# ============================================================================
 # Core Build Aliases
 # ============================================================================
 

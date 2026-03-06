@@ -96,8 +96,44 @@ def check_system_requirements() -> bool:
             "install_fedora": "sudo dnf install python3",
             "install_arch": "sudo pacman -S python",
             "install_macos": "brew install python3"
+        },
+        "pkg-config": {
+            "description": "pkg-config (CMake ZMQ discovery)",
+            "install_debian": "sudo apt install pkg-config",
+            "install_fedora": "sudo dnf install pkgconf-pkg-config",
+            "install_arch": "sudo pacman -S pkgconf",
+            "install_macos": "brew install pkg-config"
         }
     }
+
+    # ZeroMQ is a library, not a binary — check via pkg-config separately
+    zmq_ok = False
+    try:
+        import subprocess as _sp
+        r = _sp.run(["pkg-config", "--exists", "libzmq"],
+                    capture_output=True, timeout=3)
+        zmq_ok = (r.returncode == 0)
+    except Exception:
+        pass
+
+    zmq_status = "" if zmq_ok else ""
+    zmq_version = ""
+    if zmq_ok:
+        try:
+            import subprocess as _sp
+            r = _sp.run(["pkg-config", "--modversion", "libzmq"],
+                        capture_output=True, text=True, timeout=2)
+            zmq_version = r.stdout.strip()
+        except Exception:
+            pass
+
+    zmq_hint = f" ({zmq_version})" if zmq_version else " (installed)"
+    zmq_missing_hint = "" if zmq_ok else (
+        "\n   Debian/Ubuntu: sudo apt install libzmq3-dev"
+        "\n   Fedora/RHEL:   sudo dnf install zeromq-devel"
+        "\n   Arch Linux:    sudo pacman -S zeromq"
+        "\n   macOS:         brew install zeromq cppzmq"
+    )
 
     all_ok = True
     for tool, info in requirements.items():
@@ -124,6 +160,15 @@ def check_system_requirements() -> bool:
             print(f"   Arch Linux:    {info['install_arch']}")
             print(f"   macOS:         {info['install_macos']}")
             all_ok = False
+
+    # Print ZMQ library status
+    print(f"\n{zmq_status} {'ZeroMQ library (libzmq)':30}", end="")
+    if zmq_ok:
+        print(zmq_hint)
+    else:
+        print(" MISSING")
+        print(zmq_missing_hint)
+        all_ok = False
 
     print("\n" + "=" * 70)
 
