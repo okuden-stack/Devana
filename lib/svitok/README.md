@@ -1,8 +1,8 @@
-# Kiroku (記録) — Logging Library
+# Svitok (свиток) — Logging Library
 
 **Thread-safe, multi-sink structured logging for C++17**
 
-Kiroku (記録, "record") is a lightweight logging library providing formatted, multi-destination log output with file rotation and configurable verbosity. Used by all Devana components.
+Svitok (свиток, "scroll") is a lightweight logging library providing formatted, multi-destination log output with file rotation and configurable verbosity. Used by all Devana components.
 
 ---
 
@@ -97,7 +97,7 @@ logger->addSink(std::make_shared<MySink>());
 ## Architecture
 
 ```
-lib/kiroku/
+lib/svitok/
 ├── CMakeLists.txt
 ├── include/
 │   ├── Logger.h        # Main API, global singleton, macros
@@ -118,8 +118,8 @@ lib/kiroku/
 ## Build
 
 ```cmake
-add_subdirectory(lib/kiroku)
-target_link_libraries(MyTarget kiroku::kiroku)
+add_subdirectory(lib/svitok)
+target_link_libraries(MyTarget svitok::svitok)
 ```
 
 ## Namespace

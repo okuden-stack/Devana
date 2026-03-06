@@ -25,9 +25,10 @@ class ColoredFormatter(logging.Formatter):
         return super().format(record)
 
 
-def setup_logging(logs_dir: Path, level: int = logging.INFO) -> Path:
+def setup_logging(logs_dir: Path, level: int = logging.INFO, command: str = "devana") -> Path:
     logs_dir.mkdir(parents=True, exist_ok=True)
-    log_file = logs_dir / f"build_{time.strftime('%Y%m%d_%H%M%S')}.log"
+    timestamp = time.strftime('%Y-%m-%d_%H-%M-%S')
+    log_file = logs_dir / f"devana_{command}_{timestamp}.log"
 
     logging.basicConfig(
         level=level,
